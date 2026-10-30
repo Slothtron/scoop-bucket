@@ -1,0 +1,3 @@
+# 本机全局 gitignore（%USERPROFILE%\.gitignore）里忽略了 .github/，这里把它放开
+!.github/
+!.github/**
