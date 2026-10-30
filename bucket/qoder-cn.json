@@ -1,0 +1,38 @@
+{
+    "version": "0.5.1",
+    "description": "An AI-powered coding IDE from Alibaba (China edition).",
+    "homepage": "https://qoder.cn",
+    "license": "Proprietary",
+    "architecture": {
+        "64bit": {
+            "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe#/dl.7z",
+            "hash": "74ae71bcc9e42a807556058b7dbf6c0e3749956f777edf6248b3e3fd2965e2f9"
+        }
+    },
+    "installer": {
+        "script": [
+            "Get-Item \"$dir\\`$PLUGINSDIR\\app*.7z\" | Select-Object -First 1 | Expand-7zipArchive -DestinationPath $dir",
+            "Remove-Item \"$dir\\`$*\", \"$dir\\Uninst*\" -Force -Recurse -ErrorAction Ignore"
+        ]
+    },
+    "shortcuts": [
+        [
+            "Qoder CN.exe",
+            "Qoder CN"
+        ]
+    ],
+    "checkver": {
+        "script": [
+            "$r = Invoke-WebRequest -Uri 'https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe' -Method Head -UseBasicParsing",
+            "$r.Headers['x-oss-meta-version']"
+        ],
+        "regex": "([\\d.]+)"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe#/dl.7z"
+            }
+        }
+    }
+}
