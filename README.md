@@ -17,6 +17,7 @@ scoop install slothtron/workbuddy-cn
 | `qoder-cn` | 阿里 Qoder 国内版（qoder.cn）。官网另有 Qoder CN IDE、QoderWork、QoderWake，未收录 |
 | `zcode` | ZCode 稳定通道。与 Extras 的 `zcode` 同一个包，但 checkver 改打厂商更新接口，不再依赖官网页面 |
 | `zcode-preview` | ZCode preview 通道，比稳定通道早若干版本 |
+| `trae-cn` | 字节 Trae 国内版（trae.cn）。Extras 的 `trae` 是国际版，且其 autoupdate 模板仍用旧产物名 `TraeCode-Setup-x64.exe`，厂商在 2.3.93439 起已改名 `TRAE-Setup-x64.exe` |
 
 `workbuddy-cn` 与 Extras 里的 `workbuddy`（国际版）可以同时安装：两者主程序名不同（`WorkBuddy.exe` / `WorkBuddyAI.exe`），用户数据分别落在 `%APPDATA%\WorkBuddy` 与 `%APPDATA%\WorkBuddy AI`，互不干扰。
 
@@ -31,6 +32,8 @@ scoop install slothtron/workbuddy-cn
 卸载 `qoder-cn` 不会删除这个状态文件，重装时会被重写；若要恢复官方版留下的记录，把 `state.ini.bak` 改名回 `state.ini` 即可。
 
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
+
+`trae-cn` 与国际版是两条独立发布线（国内版当前号段落后于国际版）。两者的主程序名（`Trae CN.exe` / `Trae.exe`）与 CLI 名（`bin\trae-cn.cmd` / `bin\trae.cmd`）都不同，装完命令是 `trae-cn`，快捷方式也不会撞名。
 
 ## 目录结构
 
