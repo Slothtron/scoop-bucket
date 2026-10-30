@@ -12,7 +12,14 @@
     "installer": {
         "script": [
             "Get-Item \"$dir\\`$PLUGINSDIR\\app*.7z\" | Select-Object -First 1 | Expand-7zipArchive -DestinationPath $dir",
-            "Remove-Item \"$dir\\`$*\", \"$dir\\Uninst*\" -Force -Recurse -ErrorAction Ignore"
+            "Remove-Item \"$dir\\`$*\", \"$dir\\Uninst*\" -Force -Recurse -ErrorAction Ignore",
+            "$launcherDir = Join-Path $env:LOCALAPPDATA 'Qoder CN\\Qoder CN Launcher'",
+            "New-Item -ItemType Directory -Path $launcherDir -Force | Out-Null",
+            "$stateIni = Join-Path $launcherDir 'state.ini'",
+            "if ((Test-Path $stateIni) -and -not (Test-Path \"$stateIni.bak\")) { Copy-Item $stateIni \"$stateIni.bak\" }",
+            "$stamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')",
+            "$lines = @('[launcher]', 'schemaVersion=3', 'status=healthy', \"installDir=$dir\", 'appExecutable=Qoder CN.exe', \"targetVersion=$version\", \"updatedAt=$stamp\")",
+            "[IO.File]::WriteAllLines($stateIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))"
         ]
     },
     "shortcuts": [

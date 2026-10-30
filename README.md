@@ -22,6 +22,14 @@ scoop install slothtron/workbuddy-cn
 
 `qoder-cn` 装的是解包副本，与官网安装程序共存时共享同一份用户数据（`%APPDATA%\com.qodercn.app.stable`），两者不会互相覆盖，但只应保留一个在用。
 
+### qoder-cn 的 launcher 状态文件
+
+官方安装程序会写 `%LOCALAPPDATA%\Qoder CN\Qoder CN Launcher\state.ini`，0.5.1 起主程序启动时强制读取它，缺失就报 `WINDOWS_LAUNCHER_STATE_MISSING`（界面上表现为「应用服务无法完成初始化，本地数据没有被自动覆盖」）。Scoop 是直接把 NSIS 包里的 `app*.7z` 解包，安装器不运行，这个文件不会生成。
+
+所以清单的 `installer.script` 在解包后补写该文件，`installDir` 用 `$dir`（当前版本目录）、`targetVersion` 用 `$version`，升级到新版本时会随新目录重写。若目标位置已存在 `state.ini`（例如之前装过官方版），首次写入前会另存为 `state.ini.bak`，之后不再覆盖该备份。
+
+卸载 `qoder-cn` 不会删除这个状态文件，重装时会被重写；若要恢复官方版留下的记录，把 `state.ini.bak` 改名回 `state.ini` 即可。
+
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
 ## 目录结构
