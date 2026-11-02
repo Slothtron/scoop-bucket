@@ -1,12 +1,12 @@
 {
-    "version": "0.5.1",
+    "version": "0.5.2",
     "description": "An AI-powered coding IDE from Alibaba (China edition).",
     "homepage": "https://qoder.cn",
     "license": "Proprietary",
     "architecture": {
         "64bit": {
             "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe#/dl.7z",
-            "hash": "74ae71bcc9e42a807556058b7dbf6c0e3749956f777edf6248b3e3fd2965e2f9"
+            "hash": "7fb0599c9d76afd2dd7d48f4c2d47116c73f6eae16358b76da829aca96de3067"
         }
     },
     "installer": {
