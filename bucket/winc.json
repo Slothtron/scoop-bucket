@@ -1,12 +1,12 @@
 {
-    "version": "0.1.466",
+    "version": "0.1.502",
     "description": "A lighter, faster, more comfortable desktop editor, built in Rust.",
     "homepage": "https://winc.si",
     "license": "Apache-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://winc.si/releases/Winc-0.1.466-windows-x64-portable.zip",
-            "hash": "f3112ddc3efc7d74a5a000650a2048b4dbc17fa1be4bf13013c1c99e706d07bd"
+            "url": "https://winc.si/releases/Winc-0.1.502-windows-x64-portable.zip",
+            "hash": "f7a3ff6b6835d4c881cb48ad85183b075e6a457da53b1ce5b6f29d4cb2daf3e0"
         }
     },
     "bin": "winc.exe",
