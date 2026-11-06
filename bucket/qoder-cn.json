@@ -18,7 +18,8 @@
             "$stateIni = Join-Path $launcherDir 'state.ini'",
             "if ((Test-Path $stateIni) -and -not (Test-Path \"$stateIni.bak\")) { Copy-Item $stateIni \"$stateIni.bak\" }",
             "$stamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')",
-            "$lines = @('[launcher]', 'schemaVersion=3', 'status=healthy', \"installDir=$dir\", 'appExecutable=Qoder CN.exe', \"targetVersion=$version\", \"updatedAt=$stamp\")",
+            "$installDir = Join-Path (Split-Path $dir -Parent) 'current'",
+            "$lines = @('[launcher]', 'schemaVersion=3', 'status=healthy', \"installDir=$installDir\", 'appExecutable=Qoder CN.exe', \"targetVersion=$version\", \"updatedAt=$stamp\")",
             "[IO.File]::WriteAllLines($stateIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))"
         ]
     },
