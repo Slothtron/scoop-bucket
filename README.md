@@ -36,6 +36,28 @@ scoop install slothtron/workbuddy-cn
 
 卸载 `qoder-cn` 不会删除这个状态文件，重装时会被重写；若要恢复官方版留下的记录，把 `state.ini.bak` 改名回 `state.ini` 即可。
 
+### qoder-cn 的内置自动更新不要用
+
+0.5.5 起应用自己带桌面更新，会去 `gateway.qoder.com.cn/algo/api/update/desktop/win32-x64-user/stable/<version>` 查版本，并优先走 fast-update（把 launcher 复制到候选目录再校验）。**这条链路在 scoop 布局下必然失败**：
+
+```
+[WARN] Windows fast update staging failed; falling back to NSIS
+  {"version":"0.5.6","failureStage":"candidate_prepare",
+   "error":"WINDOWS_LAUNCHER_PREPARATION_FAILED:
+            refresh=WINDOWS_LAUNCHER_LOCALE_UNAVAILABLE:zh-CN.properties:
+            reuse=WINDOWS_LAUNCHER_LOCALE_UNAVAILABLE:zh-CN.properties"}
+```
+
+失败点不在文件缺失——`resources/fast-update/qoder-fast-update-manifest.json` 里 launcher 的三个条目（`Qoder CN Launcher.exe`、`i18n/en-US.properties`、`i18n/zh-CN.properties`）哈希与安装目录逐个对得上；单独把 `Qoder CN Launcher.exe` 复制到空目录运行也正常。是厂商的候选目录 staging 逻辑在 `current` 软链布局下拿不到 locale 文件。
+
+失败后会**回落到 NSIS**：下载 271 MB 的 `Qoder-CN-win-x64-user.exe` 到 `%LOCALAPPDATA%\qoder-cn-updater\attempts\<uuid>\pending\`，状态置 `ready`。这个安装包装的是官方 user 布局（`%LOCALAPPDATA%\Programs\...`），会在 scoop 这份之外再装一份，和 `current` 抢启动入口。
+
+**所以：版本只用 `scoop update qoder-cn` 升。** 已经暂存过安装包的机器，删掉暂存目录即可（可重新下载，不影响已装版本）：
+
+```powershell
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\qoder-cn-updater"
+```
+
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
 `trae-cn` 与国际版是两条独立发布线（国内版当前号段落后于国际版）。两者的主程序名（`Trae CN.exe` / `Trae.exe`）与 CLI 名（`bin\trae-cn.cmd` / `bin\trae.cmd`）都不同，装完命令是 `trae-cn`，快捷方式也不会撞名。
