@@ -58,6 +58,27 @@ scoop install slothtron/workbuddy-cn
 Remove-Item -Recurse -Force "$env:LOCALAPPDATA\qoder-cn-updater"
 ```
 
+### 关不掉，只能「保持最新」
+
+厂商没有提供关闭自动更新的开关，实测两条直觉做法都无效：
+
+- **`%APPDATA%\com.qodercn.app.stable\updates\v1\state.json` 不是控制面**。把 `stage` 改成 `"disabled"` 会在启动时被重置回 `"idle"`，`skippedVersions` 也会被服务端 assignment 覆盖，随后照常下载。
+- **应用内「跳过此版本」只对当前版本生效**（服务端 `policy.allowSkip: true`），下一个版本仍会提示。
+
+真正决定「要不要下载」的是服务端 assignment：
+
+| 本机版本 | assignment | 行为 |
+|---|---|---|
+| 落后（0.5.5 vs 0.5.6） | `server-0.5.6-<revision>` | 下载 271 MB → fast-update 失败 → 回落 NSIS |
+| 最新（0.5.6 vs 0.5.6） | `server-hold-0.5.6-<ts>` | 什么都不做 |
+
+**只要 bucket 跟得上厂商发版，自动更新就不会触发**——这正是 `.github/workflows/excavator.yml` 每 4 小时跑一次的意义。判断当前状态看这行日志即可：
+
+```powershell
+Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Pattern 'assignment-check"'
+# assignmentId 以 server-hold- 开头 = 无更新；server-<version>- 开头 = 会下载
+```
+
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
 `trae-cn` 与国际版是两条独立发布线（国内版当前号段落后于国际版）。两者的主程序名（`Trae CN.exe` / `Trae.exe`）与 CLI 名（`bin\trae-cn.cmd` / `bin\trae.cmd`）都不同，装完命令是 `trae-cn`，快捷方式也不会撞名。
