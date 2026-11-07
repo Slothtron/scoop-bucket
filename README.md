@@ -28,7 +28,11 @@ scoop install slothtron/workbuddy-cn
 
 官方安装程序会写 `%LOCALAPPDATA%\Qoder CN\Qoder CN Launcher\state.ini`，0.5.1 起主程序启动时强制读取它，缺失就报 `WINDOWS_LAUNCHER_STATE_MISSING`（界面上表现为「应用服务无法完成初始化，本地数据没有被自动覆盖」）。Scoop 是直接把 NSIS 包里的 `app*.7z` 解包，安装器不运行，这个文件不会生成。
 
-所以清单的 `installer.script` 在解包后补写该文件，`installDir` 用 `$dir`（当前版本目录）、`targetVersion` 用 `$version`，升级到新版本时会随新目录重写。若目标位置已存在 `state.ini`（例如之前装过官方版），首次写入前会另存为 `state.ini.bak`，之后不再覆盖该备份。
+所以清单的 `installer.script` 在解包后补写该文件，`targetVersion` 用 `$version`。若目标位置已存在 `state.ini`（例如之前装过官方版），首次写入前会另存为 `state.ini.bak`，之后不再覆盖该备份。
+
+`installDir` **必须写 `current` 链接的路径**，不能写 `$dir`（版本目录）：0.5.5 起主程序把状态文件里的 `installDir` 和自己实际所在目录做字符串比较，走 `current` 启动时看到的是 `...\apps\qoder-cn\current`，与版本目录 `...\apps\qoder-cn\0.5.5` 不相等就报 `WINDOWS_LAUNCHER_INSTALLATION_MISMATCH` 并退出。清单里用的是 `Join-Path (Split-Path $dir -Parent) 'current'`，跨版本恒定。
+
+同理，**启动 qoder-cn 要经由 `current`**（开始菜单快捷方式、`scoop run qoder-cn` 或 shim）。直接点 `apps\qoder-cn\<version>\Qoder CN.exe` 时应用看到的路径是版本目录，会反过来判定 mismatch。
 
 卸载 `qoder-cn` 不会删除这个状态文件，重装时会被重写；若要恢复官方版留下的记录，把 `state.ini.bak` 改名回 `state.ini` 即可。
 
