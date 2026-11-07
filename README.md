@@ -79,6 +79,8 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 # assignmentId 以 server-hold- 开头 = 无更新；server-<version>- 开头 = 会下载
 ```
 
+应用启动时会自己重建 `开始菜单\Programs\Qoder CN.lnk`（指向 `%LOCALAPPDATA%\Qoder CN\Qoder CN Launcher\Qoder CN Launcher.exe`，工作目录 `current`）。这不是第二份安装，删掉也会长回来；它读的就是我们写的 `state.ini`，`installDir` 写对了它也能正常启动。
+
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
 `trae-cn` 与国际版是两条独立发布线（国内版当前号段落后于国际版）。两者的主程序名（`Trae CN.exe` / `Trae.exe`）与 CLI 名（`bin\trae-cn.cmd` / `bin\trae.cmd`）都不同，装完命令是 `trae-cn`，快捷方式也不会撞名。
