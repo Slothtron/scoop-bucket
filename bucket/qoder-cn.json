@@ -20,7 +20,10 @@
             "$stamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')",
             "$installDir = Join-Path (Split-Path $dir -Parent) 'current'",
             "$lines = @('[launcher]', 'schemaVersion=3', 'status=healthy', \"installDir=$installDir\", 'appExecutable=Qoder CN.exe', \"targetVersion=$version\", \"updatedAt=$stamp\")",
-            "[IO.File]::WriteAllLines($stateIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))"
+            "[IO.File]::WriteAllLines($stateIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))",
+            "$installIni = Join-Path $launcherDir 'install.ini'",
+            "if ((Test-Path $installIni) -and -not (Test-Path \"$installIni.bak\")) { Copy-Item $installIni \"$installIni.bak\" }",
+            "[IO.File]::WriteAllLines($installIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))"
         ]
     },
     "shortcuts": [

@@ -30,11 +30,13 @@ scoop install slothtron/workbuddy-cn
 
 所以清单的 `installer.script` 在解包后补写该文件，`targetVersion` 用 `$version`。若目标位置已存在 `state.ini`（例如之前装过官方版），首次写入前会另存为 `state.ini.bak`，之后不再覆盖该备份。
 
+同目录还要有 **`install.ini`**（官方安装器写的「稳定层」状态，`installer.script` 同样补写，备份规则同 `state.ini`）。launcher 启动时把两份合并：只有 `install.ini` 里存在 `installDir` 时才会采纳 `state.ini` 的 `appExecutable`，缺 `install.ini` 则合并结果里应用路径为空，点快捷方式弹「未找到已安装的 Qoder CN。重新运行安装包以修复应用。」。两份的 `installDir` 必须一致，否则判 mismatch。
+
 `installDir` **必须写 `current` 链接的路径**，不能写 `$dir`（版本目录）：0.5.5 起主程序把状态文件里的 `installDir` 和自己实际所在目录做字符串比较，走 `current` 启动时看到的是 `...\apps\qoder-cn\current`，与版本目录 `...\apps\qoder-cn\0.5.5` 不相等就报 `WINDOWS_LAUNCHER_INSTALLATION_MISMATCH` 并退出。清单里用的是 `Join-Path (Split-Path $dir -Parent) 'current'`，跨版本恒定。
 
 同理，**启动 qoder-cn 要经由 `current`**（开始菜单快捷方式、`scoop run qoder-cn` 或 shim）。直接点 `apps\qoder-cn\<version>\Qoder CN.exe` 时应用看到的路径是版本目录，会反过来判定 mismatch。
 
-卸载 `qoder-cn` 不会删除这个状态文件，重装时会被重写；若要恢复官方版留下的记录，把 `state.ini.bak` 改名回 `state.ini` 即可。
+卸载 `qoder-cn` 不会删除这两份状态文件，重装时会被重写；若要恢复官方版留下的记录，把 `state.ini.bak` / `install.ini.bak` 改名回去即可。
 
 ### qoder-cn 的内置自动更新不要用
 
