@@ -60,9 +60,9 @@ scoop install slothtron/workbuddy-cn
 Remove-Item -Recurse -Force "$env:LOCALAPPDATA\qoder-cn-updater"
 ```
 
-### 关不掉，只能「保持最新」
+### 内置自动更新的处置
 
-厂商没有提供关闭自动更新的开关，实测两条直觉做法都无效：
+**清单已把它整体关掉**：`installer.script` 把 `resources\install-type.json` 写成 `{"installType":"portable"}` 后，桌面更新检查直接禁用（日志出现 `Background Desktop update checks are disabled`），不会再产生 assignment、更不会回落 NSIS 下载 271 MB。下面保留原始排查记录——在默认的 `{"installType":"user"}` 形态下，厂商没有提供关闭开关，只能「保持最新」：
 
 - **`%APPDATA%\com.qodercn.app.stable\updates\v1\state.json` 不是控制面**。把 `stage` 改成 `"disabled"` 会在启动时被重置回 `"idle"`，`skippedVersions` 也会被服务端 assignment 覆盖，随后照常下载。
 - **应用内「跳过此版本」只对当前版本生效**（服务端 `policy.allowSkip: true`），下一个版本仍会提示。
@@ -81,7 +81,16 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 # assignmentId 以 server-hold- 开头 = 无更新；server-<version>- 开头 = 会下载
 ```
 
-应用启动时会自己重建 `开始菜单\Programs\Qoder CN.lnk`（指向 `%LOCALAPPDATA%\Qoder CN\Qoder CN Launcher\Qoder CN Launcher.exe`，工作目录 `current`）。这不是第二份安装，删掉也会长回来；它读的就是我们写的 `state.ini`，`installDir` 写对了它也能正常启动。
+应用启动时会自己重建 `开始菜单\Programs\Qoder CN.lnk`（指向 `%LOCALAPPDATA%\Qoder CN\Qoder CN Launcher\Qoder CN Launcher.exe`，工作目录 `current`）。这不是第二份安装，它读的就是我们写的 `state.ini`，`installDir` 写对了它也能正常启动；不过该行为已被清单压制，见下节。
+
+### 禁止应用自建开始菜单入口
+
+`Programs\Qoder CN.lnk` 由应用启动时的「应用图标投影」环节重建（目标指向 exe、图标写到 `%APPDATA%\com.qodercn.app.stable\application-icons\`），**没有官方开关**——设置里、`state.json` 里都翻不到。反编译 `electronMain.js` 能确认：名为 `cQe` 的快捷方式 ensure 流程只有 `install-type.json` 为 `user`/`system` 时才走创建分支（缺省安装类型下它反而只修不建），但图标投影另有一条重建路径。清单用两层手段压制：
+
+1. **`resources\install-type.json` 写成 `{"installType":"portable"}`**：关掉 `cQe` 创建分支与旧路径迁移，顺带禁用桌面更新检查（见上节）；
+2. **隐藏目录占位**：在 `%APPDATA%\Microsoft\Windows\Start Menu\Programs\` 建一个名为 `Qoder CN.lnk` 的**隐藏目录**——同名文件创建必然失败，隐藏目录不出现在开始菜单应用列表，应用侧把错误静默吞掉，启动无报错。
+
+`installer.script` 每次安装/升级都会重建占位，`uninstaller` 卸载时删掉它。菜单里唯一的 Qoder 入口是 `Scoop Apps\Qoder CN.lnk`（scoop 清单 `shortcuts` 字段创建），`scoop reset qoder-cn` 管的就是它。
 
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 

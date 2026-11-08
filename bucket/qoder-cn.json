@@ -23,7 +23,19 @@
             "[IO.File]::WriteAllLines($stateIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))",
             "$installIni = Join-Path $launcherDir 'install.ini'",
             "if ((Test-Path $installIni) -and -not (Test-Path \"$installIni.bak\")) { Copy-Item $installIni \"$installIni.bak\" }",
-            "[IO.File]::WriteAllLines($installIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))"
+            "[IO.File]::WriteAllLines($installIni, [string[]]$lines, (New-Object System.Text.UTF8Encoding($false)))",
+            "$itJson = Join-Path $dir 'resources\\install-type.json'",
+            "[IO.File]::WriteAllText($itJson, '{\"installType\":\"portable\"}', (New-Object System.Text.UTF8Encoding($false)))",
+            "$lnkPath = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Qoder CN.lnk'",
+            "if ((Test-Path -LiteralPath $lnkPath) -and -not (Get-Item -LiteralPath $lnkPath -Force).PSIsContainer) { Remove-Item -LiteralPath $lnkPath -Force }",
+            "if (-not (Test-Path -LiteralPath $lnkPath)) { New-Item -ItemType Directory -Path $lnkPath | Out-Null }",
+            "$lnkItem = Get-Item -LiteralPath $lnkPath -Force",
+            "$lnkItem.Attributes = $lnkItem.Attributes -bor [IO.FileAttributes]::Hidden"
+        ]
+    },
+    "uninstaller": {
+        "script": [
+            "Remove-Item -LiteralPath (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Qoder CN.lnk') -Recurse -Force -ErrorAction Ignore"
         ]
     },
     "shortcuts": [
