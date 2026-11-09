@@ -1,12 +1,12 @@
 {
-    "version": "0.5.6",
+    "version": "0.5.7",
     "description": "An AI-powered coding IDE from Alibaba (China edition).",
     "homepage": "https://qoder.cn",
     "license": "Proprietary",
     "architecture": {
         "64bit": {
             "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe#/dl.7z",
-            "hash": "ea3b5bb1126f0c455b956927795b1c14bc511fbd2f019fb7f8799b0ac14ed407"
+            "hash": "800fc5db556bcd0b79462da1a9bdd603f3d491c2774db1388e526cca6a80a6a9"
         }
     },
     "installer": {
@@ -34,9 +34,7 @@
         ]
     },
     "uninstaller": {
-        "script": [
-            "Remove-Item -LiteralPath (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Qoder CN.lnk') -Recurse -Force -ErrorAction Ignore"
-        ]
+        "script": "Remove-Item -LiteralPath (Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\Qoder CN.lnk') -Recurse -Force -ErrorAction Ignore"
     },
     "shortcuts": [
         [
