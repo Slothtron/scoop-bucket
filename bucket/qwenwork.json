@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "description": "An AI office assistant from Alibaba that gets work done (China edition).",
+    "homepage": "https://qwenwork.cn",
+    "license": "Proprietary",
+    "architecture": {
+        "64bit": {
+            "url": "https://assets.qwenwork.cn/release/latest/qwenworkcn-setup-x64.exe#/dl.7z",
+            "hash": "5919e0af902f72be27c568c7b50289494a0b04418fc9e5d6ed184432d8ad4d79"
+        }
+    },
+    "installer": {
+        "script": [
+            "Get-Item \"$dir\\`$PLUGINSDIR\\app*.7z\" | Select-Object -First 1 | Expand-7zipArchive -DestinationPath $dir",
+            "Remove-Item \"$dir\\`$*\", \"$dir\\Uninst*\" -Force -Recurse -ErrorAction Ignore",
+            "$selfLnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\千问办公\\千问办公.lnk'",
+            "if ((Test-Path -LiteralPath $selfLnk) -and -not (Get-Item -LiteralPath $selfLnk -Force).PSIsContainer) { Remove-Item -LiteralPath $selfLnk -Force }",
+            "if (-not (Test-Path -LiteralPath $selfLnk)) { New-Item -ItemType Directory -Path $selfLnk -Force | Out-Null }",
+            "$selfFolder = Get-Item -LiteralPath (Split-Path $selfLnk -Parent) -Force",
+            "$selfFolder.Attributes = $selfFolder.Attributes -bor [IO.FileAttributes]::Hidden",
+            "$selfItem = Get-Item -LiteralPath $selfLnk -Force",
+            "$selfItem.Attributes = $selfItem.Attributes -bor [IO.FileAttributes]::Hidden"
+        ]
+    },
+    "uninstaller": {
+        "script": [
+            "$selfLnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\千问办公\\千问办公.lnk'",
+            "Remove-Item -LiteralPath $selfLnk -Recurse -Force -ErrorAction Ignore",
+            "Remove-Item -LiteralPath (Split-Path $selfLnk -Parent) -Force -ErrorAction Ignore"
+        ]
+    },
+    "shortcuts": [
+        [
+            "QwenWorkCN.exe",
+            "千问办公"
+        ]
+    ],
+    "checkver": {
+        "url": "https://docs.qwenwork.cn/release-notes/desktop.md",
+        "regex": "description=\"千问办公 ([\\d.]+)\""
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://assets.qwenwork.cn/release/latest/qwenworkcn-setup-x64.exe#/dl.7z"
+            }
+        }
+    }
+}

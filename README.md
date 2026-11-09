@@ -18,6 +18,7 @@ scoop install slothtron/workbuddy-cn
 | `zcode` | ZCode 稳定通道。与 Extras 的 `zcode` 同一个包，但 checkver 改打厂商更新接口，不再依赖官网页面 |
 | `zcode-preview` | ZCode preview 通道，比稳定通道早若干版本 |
 | `trae-cn` | 字节 Trae 国内版（trae.cn）。Extras 的 `trae` 是国际版，且其 autoupdate 模板仍用旧产物名 `TraeCode-Setup-x64.exe`，厂商在 2.3.93439 起已改名 `TRAE-Setup-x64.exe` |
+| `qwenwork` | 阿里千问办公（qwenwork.cn）。下载直链是常青地址、文件名不带版本，版本号取自官方更新日志 |
 | `winc` | DEEIX 的 Rust 文本编辑器（winc.si，Apache-2.0）。装的是官方 portable zip，`winc` 兼作 `git core.editor` |
 
 `workbuddy-cn` 与 Extras 里的 `workbuddy`（国际版）可以同时安装：两者主程序名不同（`WorkBuddy.exe` / `WorkBuddyAI.exe`），用户数据分别落在 `%APPDATA%\WorkBuddy` 与 `%APPDATA%\WorkBuddy AI`，互不干扰。
@@ -91,6 +92,16 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 2. **隐藏目录占位**：在 `%APPDATA%\Microsoft\Windows\Start Menu\Programs\` 建一个名为 `Qoder CN.lnk` 的**隐藏目录**——同名文件创建必然失败，隐藏目录不出现在开始菜单应用列表，应用侧把错误静默吞掉，启动无报错。
 
 `installer.script` 每次安装/升级都会重建占位，`uninstaller` 卸载时删掉它。菜单里唯一的 Qoder 入口是 `Scoop Apps\Qoder CN.lnk`（scoop 清单 `shortcuts` 字段创建），`scoop reset qoder-cn` 管的就是它。
+
+### 千问办公（qwenwork）
+
+官网只给一个常青直链 `https://assets.qwenwork.cn/release/latest/qwenworkcn-setup-x64.exe`（electron-builder NSIS 3.04、asInvoker；载荷 `$PLUGINSDIR\app-64.7z` 393 MB，解包 1.5 GB；主程序 `QwenWorkCN.exe`，ProductName `QwenWorkCN`、CompanyName DingTalk）。文件名不带版本，OSS 对象也没有 `x-oss-meta-version` 头，`latest.yml` / `version.json` 一律 404，**版本号只能从官方更新日志取**：`https://docs.qwenwork.cn/release-notes/desktop.md` 里最新一条是 `<Update ... description="千问办公 X.Y.Z">`，清单 `checkver` 就抓这一行（按出现顺序，最新在最前）。`autoupdate` 的 URL 不含 `$version`，哈希由 Excavator 现场下载 393 MB 重算。
+
+安装形态：Scoop 解包 `app-64.7z` 后直接用 `QwenWorkCN.exe`。用户数据在 `%APPDATA%\QwenWorkCN`（另有缓存目录 `~/.qwenworkcn`），与官网安装版共用同一份，只应保留一个在用。应用靠 `resources\install-type.json` 判断安装类型（只认 `user` / `system` / `store` 三个值），scoop 路径命中路径兜底，日志里是 `[InstallType] Resolved Windows install type { installType: 'portable' }`；它没有 Qoder 那种 launcher，也就不需要 `state.ini` / `install.ini` / `updater.cfg`（缺 `updater.cfg` 时 `installerKind` 为 `null`，不影响启动）。
+
+**它会自己建开始菜单入口**：`Programs\千问办公\千问办公.lnk`，target 取 `process.execPath`（版本目录，不是 `current`，升级后就成死链）。压制方式和 qoder-cn 一样——`installer.script` 在该路径放隐藏目录占位、顺手把父目录也设成隐藏，`uninstaller` 删掉；代价是每次启动日志多一条 `Failed to read shortcut link` WARN。菜单里唯一的入口是 `Scoop Apps\千问办公.lnk`。
+
+**自动更新**：`AutoUpdater` / `NativeUpdater` 打 `gateway.qwenwork.cn/api/client/biz/v1/client-updates/check`。未登录时直接 `[NativeUpdater] Skipping check: user not authenticated`；登录后在 `portable` 安装下 `canSilentUpdate=false`，流程是「下载 → 提示 → 用户确认 → 拉起 NSIS」，确认后会往 `%LOCALAPPDATA%\Programs` 再装一份官方 user 布局。**版本只用 `scoop update qwenwork` 升**，别点应用内的更新提示。
 
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
