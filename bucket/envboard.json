@@ -16,9 +16,17 @@
             "envboard"
         ]
     ],
+    "persist": [
+        "envboard-data"
+    ],
+    "post_install": [
+        "Set-Content -LiteralPath \"$dir\\envboard.portable\" -Value 'envboard portable marker (created by scoop); state: persist/envboard/envboard-data' -Encoding ascii"
+    ],
     "notes": [
         "Requires the WebView2 runtime (already present on most Windows 10/11 machines).",
-        "Environments, rules and the shared CA live in %LOCALAPPDATA%\\envboard."
+        "This is the portable build: state (ledger, rules, shared CA, lock) lives in $persist_dir\\envboard-data and survives 'scoop update'.",
+        "Portable form runs as its own instance: window title is suffixed '(portable)', default port range is 17000-17999, and the WebView2 profile is separate, so it can run alongside the installer build.",
+        "Upgrading from a build that stored state in %LOCALAPPDATA%\\envboard? Close envboard, then move that folder to $persist_dir\\envboard-data before the first launch; otherwise you start with an empty environment list."
     ],
     "checkver": {
         "github": "https://github.com/Slothtron/envboard"
