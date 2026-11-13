@@ -1,0 +1,33 @@
+{
+    "version": "0.1.0",
+    "description": "Multi-environment HTTP proxy manager: one environment per port, several environments running at once.",
+    "homepage": "https://github.com/Slothtron/envboard",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/Slothtron/envboard/releases/download/v0.1.0/envboard.exe",
+            "hash": "774e56df6ad66d5d5b0008c531520e92564b4dec547bcef609f2bc6ab7c8719c"
+        }
+    },
+    "bin": "envboard.exe",
+    "shortcuts": [
+        [
+            "envboard.exe",
+            "envboard"
+        ]
+    ],
+    "notes": [
+        "Requires the WebView2 runtime (already present on most Windows 10/11 machines).",
+        "Environments, rules and the shared CA live in %LOCALAPPDATA%\\envboard."
+    ],
+    "checkver": {
+        "github": "https://github.com/Slothtron/envboard"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/Slothtron/envboard/releases/download/v$version/envboard.exe"
+            }
+        }
+    }
+}

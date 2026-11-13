@@ -20,6 +20,7 @@ scoop install slothtron/workbuddy-cn
 | `trae-cn` | 字节 Trae 国内版（trae.cn）。Extras 的 `trae` 是国际版，且其 autoupdate 模板仍用旧产物名 `TraeCode-Setup-x64.exe`，厂商在 2.3.93439 起已改名 `TRAE-Setup-x64.exe` |
 | `qwenwork` | 阿里千问办公（qwenwork.cn）。下载直链是常青地址、文件名不带版本，版本号取自官方更新日志 |
 | `winc` | DEEIX 的 Rust 文本编辑器（winc.si，Apache-2.0）。装的是官方 portable zip，`winc` 兼作 `git core.editor` |
+| `envboard` | 多环境代理管理器（本仓项目，Tauri 桌面 + 进程内代理引擎，github.com/Slothtron/envboard）。装的是官方免安装 exe；需要 WebView2，状态在 `%LOCALAPPDATA%\envboard` |
 
 `workbuddy-cn` 与 Extras 里的 `workbuddy`（国际版）可以同时安装：两者主程序名不同（`WorkBuddy.exe` / `WorkBuddyAI.exe`），用户数据分别落在 `%APPDATA%\WorkBuddy` 与 `%APPDATA%\WorkBuddy AI`，互不干扰。
 
