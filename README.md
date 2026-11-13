@@ -33,7 +33,7 @@ scoop install slothtron/workbuddy-cn
 - `persist` 不能省：`scoop\apps\envboard\<version>` 在升级/`scoop cleanup` 时会被替换，数据留在版本目录就等于丢。
 - 之前按旧清单装过的，数据在 `%LOCALAPPDATA%\envboard`：关掉应用，把该目录内容移到 `scoop\persist\envboard\envboard-data` 再启动，否则环境列表是空的。
 - 清单改动不会自动重装：`scoop install envboard --force` 才会重新执行 `persist` 与 `post_install`。
-- 0.1.0 的二进制已支持 `envboard.portable` 标记（状态随目录走）；完整的形态隔离（标题带「（portable）」、WebView2 profile 与默认端口段独立）要等 0.1.0 之后的版本。
+- 0.2.0 起完整支持便携形态：标题带「（portable）」、WebView2 profile 与默认端口段（17000-17999）独立，可与 NSIS 安装的正式版同时运行。0.1.0 只支持「状态随目录走」，同时跑会撞端口。
 
 ### qoder-cn 的 launcher 状态文件
 
