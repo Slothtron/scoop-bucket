@@ -1,12 +1,12 @@
 {
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Multi-environment HTTP proxy manager: one environment per port, several environments running at once.",
     "homepage": "https://github.com/Slothtron/envboard",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/Slothtron/envboard/releases/download/v0.2.1/envboard.exe",
-            "hash": "689a20588c038b8391c2d6e1a6c9099d49605afa8a29f8705346825e3b3f3a49"
+            "url": "https://github.com/Slothtron/envboard/releases/download/v0.2.2/envboard.exe",
+            "hash": "e535d2d594269ae952e7718533205be5484f2024970e49d6b47886c5ab530197"
         }
     },
     "bin": "envboard.exe",
@@ -34,7 +34,11 @@
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/Slothtron/envboard/releases/download/v$version/envboard.exe"
+                "url": "https://github.com/Slothtron/envboard/releases/download/v$version/envboard.exe",
+                "hash": {
+                    "url": "https://github.com/Slothtron/envboard/releases/download/v$version/SHA256SUMS",
+                    "regex": "([a-fA-F0-9]{64})\\s+\\*?envboard\\.exe"
+                }
             }
         }
     }
