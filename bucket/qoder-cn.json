@@ -1,12 +1,12 @@
 {
-    "version": "0.5.11",
+    "version": "0.5.12",
     "description": "An AI-powered coding IDE from Alibaba (China edition).",
     "homepage": "https://qoder.cn",
     "license": "Proprietary",
     "architecture": {
         "64bit": {
-            "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe#/dl.7z",
-            "hash": "88ffcd652573d97c4bfde30eb6dc7a30ae975a58b6d167f8cdfdfb98e5dcc2e4"
+            "url": "https://static.qoder.com.cn/qoder-app/releases/0.5.12/Qoder-CN-win-x64-user.exe#/dl.7z",
+            "hash": "6cf0c7357c4e09b8893b7576605601b6057e844bc103f947df0a6736bd793739"
         }
     },
     "installer": {
@@ -43,17 +43,18 @@
         ]
     ],
     "checkver": {
-        "script": [
-            "$r = Invoke-WebRequest -Uri 'https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe' -Method Head -UseBasicParsing",
-            "$r.Headers['x-oss-meta-version']"
-        ],
-        "regex": "([\\d.]+)"
+        "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest.yml",
+        "regex": "version: ([\\d.]+)"
     },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest/Qoder-CN-win-x64-user.exe#/dl.7z"
+                "url": "https://static.qoder.com.cn/qoder-app/releases/$version/Qoder-CN-win-x64-user.exe#/dl.7z"
             }
+        },
+        "hash": {
+            "url": "https://qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest.yml",
+            "regex": "(?s)files:.*?sha256:\\s?([a-fA-F0-9]{64})"
         }
     }
 }

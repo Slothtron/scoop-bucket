@@ -127,7 +127,11 @@ bin/         维护脚本，转调 scoop 自身的 checkver/checkhashes/checkurl
 
 ## 维护
 
-新版本靠清单里的 `checkver` + `autoupdate` 自动发现：`.github/workflows/excavator.yml` 每 4 小时跑一次，有新版本就按 `autoupdate` 的模板重写 URL、从更新接口取 `sha256hash`，然后提交回仓库。
+新版本靠清单里的 `checkver` + `autoupdate` 自动发现：`.github/workflows/excavator.yml` 每 4 小时跑一次，有新版本就按 `autoupdate` 的模板重写 URL 与哈希，然后提交回仓库。
+
+`qoder-cn` 走的是厂商的 electron-builder 更新清单 `qoder-app.oss-cn-beijing.aliyuncs.com/qoder-app/releases/latest.yml`：它同时给 `version`、`files[0].url`（**版本化直链**）和 `files[0].sha256`，所以 `checkver` 用普通 `url + regex: version: ([\d.]+)`，`autoupdate.architecture.64bit.url` 用 `$version` 拼 `static.qoder.com.cn/qoder-app/releases/$version/...`，`autoupdate.hash` 直接从 yml 里抽 sha256。**Excavator bump 不再需要下载 256 MB 重算哈希**，也不用担心常青 `latest` 对象在发版瞬间被覆盖。哈希正则用 `(?s)files:.*?sha256:…` 锚定 `files[0]`，避开 `differential` / `windowsFastUpdate` 里同名字段。版本化对象与 `latest` 实测 ETag 相同。
+
+`trae-cn` 的更新接口一次返回「build 号」（`2.3.102387`，用于 URL 与 Scoop `version`）和「营销版本」（`3.4.18`，界面/winget 用）两个数，清单取前者；`checkver` 走 `url + jsonpath + regex`，`autoupdate` 用 `$version` 拼 URL。Scoop 也支持把 checkver 正则的命名捕获组（如 `(?<url>…)`）自动注入成 `$matchUrl` 直接引用接口给的下载地址（`lib/autoupdate.ps1:464-469`），但那需要改成 script 型 `checkver`，收益抵不上复杂度，本清单不用——细节见 `docs/third-party-qoder-trae-manifests.md`。
 
 本地手动跑（在仓库根目录）：
 

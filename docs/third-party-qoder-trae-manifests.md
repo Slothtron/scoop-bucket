@@ -7,6 +7,7 @@
 - **Qoder CN 主程序（`Qoder-CN-win-x64-user.exe`）没有任何第三方 scoop bucket 收录**，本 bucket 是独一份。GitHub 上带 `qoder` 的 bucket 全是另外两个产品：`Qoder.json` 是**国际版**（`download.qoder.com/release/latest/QoderUserSetup-x64.exe`），`QoderworkCN.json` 是 **QoderWork CN**（`static.qoder.com.cn/qoder-work-cn/...`，另一个产品）。
 - **Trae 国内版有一大堆 bucket**，但高度同质化：31 份里 23 份是 Trae 国内版，按内容哈希只分成 5 个流派，且大多是互相复制（同一份 manifest 出现在 5 个仓库）。
 - **值得借鉴的只有两项**，都跟"免下载取版本/哈希"有关，详见下节。其余（261 行 portable profile、innounp 手工解包、persist 重定向）都不适合本 bucket。
+- **落地结果（2026-11-15）**：第 1 项已落地到 `bucket/qoder-cn.json`（顺带 bump 到 0.5.12，见下节末）；第 2 项机制已验证可行，但**决定不落地**到 `trae-cn.json`，理由见该节。
 
 ## 值得借鉴
 
@@ -35,6 +36,24 @@ releaseDate: 2026-11-13T12:14:10.081Z
 
 这正是本 bucket 历史记录里「autoupdate 不支持 script 型 hash，每次 bump 要重新下载 239 MB」那个包袱的解法。
 
+**已落地**（`bucket/qoder-cn.json`，2026-11-15）。落地时厂商恰好发了 0.5.12，清单同步 bump：
+
+```json
+"checkver":  { "url": "…/releases/latest.yml", "regex": "version: ([\\d.]+)" },
+"autoupdate": {
+    "architecture": { "64bit": { "url": "https://static.qoder.com.cn/qoder-app/releases/$version/Qoder-CN-win-x64-user.exe#/dl.7z" } },
+    "hash": { "url": "…/releases/latest.yml", "regex": "(?s)files:.*?sha256:\\s?([a-fA-F0-9]{64})" }
+}
+```
+
+三个实测要点：
+
+1. **哈希正则必须锚定 `files:`**。`latest.yml` 里 `differential` 和 `windowsFastUpdate` 也各有 `sha256`；`find_hash_in_textfile` 用 `-match` 取第一个匹配，虽然 `files[0]` 恰好在前、简单正则也能对，但锚定后不怕厂商调顺序。
+2. **版本化对象与常青 `latest` 是同一个字节**：0.5.11 时两者 ETag / Content-Length / `x-oss-meta-sha256` 逐一相同，所以换 URL 不影响已装版本；0.5.12 的 `checkhashes.ps1` 真下 256 MB 复核 `OK`。
+3. **`checkver -f -u` 在副本上可完整重现**：一次产出 `version=0.5.12`、版本化 URL、`hash=6cf0c735…`，且 `installer.script` 的 20 行定制逻辑、`uninstaller`、`shortcuts` 全部原样保留；Excavator 从此只需 GET 一个 1 KB 的 yml。
+
+调研过程中还抓到一次**发版竞态**：第一次取 `latest.yml` 是 0.5.11，几分钟后再取已变 0.5.12（`x-oss-meta-version` 同步变）。这反过来证明了「用版本化 URL 而非常青 `latest`」的价值——否则 Excavator 可能在写完 `version` 后、`hash` 生效前被新对象覆盖，导致哈希不匹配。
+
 ### 2. checkver 正则的命名捕获组会自动变成 autoupdate 的 `$matchXxx`
 
 Scoop 源码 `lib/autoupdate.ps1:465-469` 把 checkver 正则的命名组（如 `(?<build>...)`）注入替换表，生成 `$matchBuild`：
@@ -53,6 +72,13 @@ $versionVariables.Add('$match' + (Get-Culture).TextInfo.ToTitleCase($_.Name), $_
 ——版本和下载地址可以**一次性从接口里成对取出**，autoupdate 直接引用 `$matchUrl`，不用自己拼 URL 模板。Trae 的更新接口 `api.trae.com.cn/icube/api/v1/native/version/trae/cn/latest` 一次返回 `download[].x64`（含 build 号的 URL）和 `versions[].version`（营销版本 3.4.18），`xrgzs/sdoog` 就是用一个 script 同时吐出 `2.3.102387=====<url>` 再拆成两组。
 
 我们当前 `trae-cn.json` 的 `checkver` 走 `jsonpath: $.data.manifest.win32.versions[?(@.region == 'cn')].url` + `regex: stable/(\d+(?:\.\d+)+)/win`，再在 autoupdate 里拼 URL 模板。能工作，但换成 `$matchUrl` 更抗厂商改 URL 结构。
+
+**已验证可行，但决定不落地**。在副本上把 `trae-cn.json` 改成 `xrgzs/sdoog` 那套 script 型 `checkver`（吐 `version=====url`）+ `"autoupdate.url": "$matchUrl"`，`checkver -f -u` 能正确产出完整 URL 和哈希。踩到的两个坑：
+
+- `checkver` 用 `$matchesHashtable['1']`（即**第 1 个编号捕获组**）当版本号。若把 `(?<url>…)` 写在 `(?<version>…)` 前面，版本号会变成整条 URL；用 `(?<version>[^=]+)=====(?<url>.+)` 这种把 version 放首位的写法才对。
+- 若保留 `jsonpath` 再叠正则，`$page` 会被替换成 jsonpath 的结果（一条完整 URL），此时 `(?<url>[\d.]+/win32/\S+)` 只会抓到相对文件名 `$matchUrl=TRAE_CN-Setup-x64.exe`，autoupdate 直接报 `Invalid URI`。要么让正则捕获整条 URL，要么整体改 script 型。
+
+不落地的理由：现有 `url + jsonpath + regex` 是 Scoop 原生声明式写法，不执行 PowerShell；换成 `$matchUrl` 必须改成 script 型 `checkver`，而唯一收益是「不用拼 URL 模板」——Trae 的 URL 模板从 2.3.24299 到 2.3.102387 一直没变过。机制本身记在这里，等厂商真改 URL 结构时再启用。
 
 ## 不值得借鉴（及原因）
 
