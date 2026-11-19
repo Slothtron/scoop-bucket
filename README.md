@@ -19,6 +19,7 @@ scoop install slothtron/workbuddy-cn
 | `zcode-preview` | ZCode preview 通道，比稳定通道早若干版本 |
 | `trae-cn` | 字节 Trae 国内版（trae.cn）。Extras 的 `trae` 是国际版，且其 autoupdate 模板仍用旧产物名 `TraeCode-Setup-x64.exe`，厂商在 2.3.93439 起已改名 `TRAE-Setup-x64.exe` |
 | `qwenwork` | 阿里千问办公（qwenwork.cn）。下载直链是常青地址、文件名不带版本，版本号取自官方更新日志 |
+| `feishu` | 字节飞书（feishu.cn）。x64 + 32bit 双架构；版本/下载地址/MD5 全部取自官方 `api/downloads` 接口 |
 | `winc` | DEEIX 的 Rust 文本编辑器（winc.si，Apache-2.0）。装的是官方 portable zip，`winc` 兼作 `git core.editor` |
 | `envboard` | 多环境代理管理器（本仓项目，Tauri 桌面 + 进程内代理引擎，github.com/Slothtron/envboard）。装的是官方免安装 exe，按**便携形态**运行：`post_install` 写 `envboard.portable` 标记，状态经 `persist` 落到 `scoop\persist\envboard\envboard-data`。需要 WebView2 |
 
@@ -112,6 +113,22 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 **它会自己建开始菜单入口**：`Programs\千问办公\千问办公.lnk`，target 取 `process.execPath`（版本目录，不是 `current`，升级后就成死链）。压制方式和 qoder-cn 一样——`installer.script` 在该路径放隐藏目录占位、顺手把父目录也设成隐藏，`uninstaller` 删掉；代价是每次启动日志多一条 `Failed to read shortcut link` WARN。菜单里唯一的入口是 `Scoop Apps\千问办公.lnk`。
 
 **自动更新**：`AutoUpdater` / `NativeUpdater` 打 `gateway.qwenwork.cn/api/client/biz/v1/client-updates/check`。未登录时直接 `[NativeUpdater] Skipping check: user not authenticated`；登录后在 `portable` 安装下 `canSilentUpdate=false`，流程是「下载 → 提示 → 用户确认 → 拉起 NSIS」，确认后会往 `%LOCALAPPDATA%\Programs` 再装一份官方 user 布局。**版本只用 `scoop update qwenwork` 升**，别点应用内的更新提示。
+
+### 飞书（feishu）
+
+下载页 `feishu.cn/download` 是 Vite SPA，直链不在 HTML 里；它运行时打 `https://www.feishu.cn/api/downloads`，一次返回全部平台的版本、直链和哈希。这是本项目里元信息最全的一家：
+
+```json
+"Windows":    { "download_link": "https://sf3-cn.feishucdn.com/obj/ee-appcenter/2ea298b4/Feishu-win32_ia32-8.6.13-signed.exe", "version_number": "Windows@V8.6.13", "hash": "a54ac30c11b4204484790b032668d725" },
+"Windows_x64":{ "download_link": "https://sf3-cn.feishucdn.com/obj/ee-appcenter/66bd5227/Feishu-win32_x64-8.6.13-signed.exe", "version_number": "Windows@V8.6.13", "hash": "f5202819cb9a06cceeb138de42c970d0" }
+```
+
+- **版本 / 地址 / 哈希三合一**：`checkver` 用一条正则同时抓版本号和两段 CDN 路径（`path` = ia32、`pathx` = x64），`autoupdate` 用 `$matchPath` / `$matchPathx` + `$version` 重建两个架构的 URL，哈希用 `jsonpath` 从同一接口的 `$.versions.Windows.hash` / `$.versions.Windows_x64.hash` 取——Excavator bump 只读一个 JSON，不用下载 491 MB 安装包。
+- **哈希是 MD5**（32 位裸值），清单里写 `md5:` 前缀；实测 `md5sum` 与接口值一致（`f5202819…`）。
+- **两个可用的接口**：`/api/package_info?platform=16`（x64）/ `?platform=7`（ia32）返回**带签名的临时 URL**（`x-expires` 约 30 分钟，过期后 403，改 `x-expires` 会破坏签名）；`/api/downloads` 给的是 `sf3-cn.feishucdn.com/obj/...` 的**无签名稳定直链**，清单用后者。
+- **两个架构都收**：`Windows`（ia32）和 `Windows_x64`；飞书官方不提供 arm64 桌面版。
+- **安装形态**：下载的是 491 MB 自解压 exe（内含 Delta LZMA 的 7z 载荷），用 `#/dl.7z` 让 Scoop 直接解包；`extract_to: app` 把 9896 个文件隔离到 `app\`，主程序 `app\Feishu.exe`，快捷方式指向它。用户数据走应用默认目录，与官网安装版共用同一份，只应保留一个在用。
+- 第三方 bucket 里 feishu manifest 很多（dorado / kkzzhizhou / lzwme 等 14 个仓库、30 份），本清单的 checkver/autoupdate 以 `chawyehsu/dorado` 为基础；调研细节见 `docs/third-party-feishu-manifests.md`。
 
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
