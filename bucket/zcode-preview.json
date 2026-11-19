@@ -1,5 +1,5 @@
 {
-    "version": "3.18.2",
+    "version": "3.19.0",
     "description": "ZCode preview channel: a full-featured Agentic Development Environment (ADE) built for Long Horizon Tasks, powered by Z.ai.",
     "homepage": "https://zcode.z.ai/en",
     "license": {
@@ -8,12 +8,12 @@
     },
     "architecture": {
         "64bit": {
-            "url": "https://cdn-zcode.z.ai/zcode/electron/releases/3.18.2/windows-x64/ZCode-3.18.2-win-x64.exe#/dl.7z",
-            "hash": "7b747ebca9ac55ee695f9f2608b26b9818ec90187c1889e991b73e7728cc268d"
+            "url": "https://cdn-zcode.z.ai/zcode/electron/releases/3.19.0/windows-x64/ZCode-3.19.0-win-x64.exe#/dl.7z",
+            "hash": "18db074a95ac8b38e7de8cb33edb6e7f99206d66cf2210e0c3e22bbc6db4d30f"
         },
         "arm64": {
-            "url": "https://cdn-zcode.z.ai/zcode/electron/releases/3.18.2/windows-arm64/ZCode-3.18.2-win-arm64.exe#/dl.7z",
-            "hash": "df57811a7c6162c6157efc61663c362bb7cb3eceee47c4473c1b13075de6307c"
+            "url": "https://cdn-zcode.z.ai/zcode/electron/releases/3.19.0/windows-arm64/ZCode-3.19.0-win-arm64.exe#/dl.7z",
+            "hash": "5f24d84877a7e273507a0e92ce4b14ade1f0f809099d80eb6b8371459c99a57e"
         }
     },
     "installer": {
