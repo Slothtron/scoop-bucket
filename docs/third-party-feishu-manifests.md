@@ -68,6 +68,18 @@
 
 验证：JSON 全绿；`checkver feishu: 8.6.13` 幂等；把版本改成 8.0.0 + 假 URL/假哈希后 `checkver -u` 正确 bump 回 8.6.13 并重建两个 URL + 两个 MD5（复制品上测）；真实 `scoop install feishu` 下载 491 MB、哈希 OK、解包、建 `current`、建快捷方式成功；启动 `app\Feishu.exe` 得到 8 个进程 + 窗口标题「飞书」、零错误对话框。
 
+### 自动更新开关的落点（2026-11-20 补充）
+
+用户在设置页关掉「自动安装更新」后，排查配置落点：
+
+- **UI 开关 = preference 键 `lark.update.disable_auto_install_update`**。从 `app\webcontent\setting.asar` 的设置页代码反解：`componentDidMount` 读 `T.Jt("lark.update.disable_auto_install_update")`，`toggleAutoInstallUpdate` 写 `T.hZ("lark.update.disable_auto_install_update", !e)`（关闭时写 `true`）。这是 setting.asar 里**唯一**的 `lark.update.*` 键。
+- **存储 = 加密的 global preference**。模块 96214 的 `J8()` 分支（`isPreferenceContainerEnabled && isLarkAPISettingsMigrationEnabled`）走 `LarkAPI.preference.getGlobalPreference()`，落在 `%APPDATA%\LarkShell\sdk_storage\<用户 hash>\settings.db`。该文件**加密**（头部 `k\xc5\xe5\x96…` 非 SQLite magic），全盘字面/二进制搜不到键名；`settings.db-wal` 也加密。用户级、跨 scoop 升级保留。
+- **另一个相邻键 `lark.update.disable_auto_update`**（frame.dll 里也有），但 UI 复选框用的是 `disable_auto_install_update`。
+- **关闭动作留痕**：`%APPDATA%\LarkShell\update\update_report.json` 里 `event_name: update_disabled_install`，时间戳即关闭时刻。此前飞书已据此下载过 8.7.8 全量更新包到 `update\update\8.7.8\`（491 MB 级，未安装）。
+- **frame.dll 里的官方禁用信号**：环境变量 `LARK_UPDATE_DISALLOW_AUTO_UPDATE`（`... is set, won't start update`）、flag 文件 `disallow_auto_update.flag`（`Disallow auto update flag file exists ..., won't start update`），另有 `LARK_UPDATE_ALLOW_DEV_AUTO_QUERY` 等。还有 `ShellAPI::app::update::DisableAutoUpdate` / `queryDisableStatus` API。
+
+**清单落地**：用 Scoop 原生 `env_set` 字段设 `LARK_UPDATE_DISALLOW_AUTO_UPDATE=1`（用户级环境变量，卸载自动清理）。实测：设该变量并重启后飞书照常启动（8 进程、窗口「飞书」），`update\`/`update_downloading\` mtime 不变（没再下载更新）。`env_set` 与 version/url/hash 无关，副本上模拟 `checkver -u` bump 后 `env_set` 原样保留。备选方案（未采用）：删除安装目录的 `update.exe`（实测也能启动，但升级会重新解包带回，且不如环境变量干净）、放 `disallow_auto_update.flag`（路径未 100% 钉死）。
+
 ## 候选仓库原始路径（本环境用 `gh api ... --jq .content | base64 -d` 取回）
 
 - https://raw.githubusercontent.com/chawyehsu/dorado/HEAD/bucket/feishu.json （底稿）

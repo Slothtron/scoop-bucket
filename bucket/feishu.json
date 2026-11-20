@@ -17,6 +17,9 @@
         }
     },
     "extract_to": "app",
+    "env_set": {
+        "LARK_UPDATE_DISALLOW_AUTO_UPDATE": "1"
+    },
     "shortcuts": [
         [
             "app/Feishu.exe",

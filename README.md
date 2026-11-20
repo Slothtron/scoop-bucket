@@ -128,6 +128,11 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 - **两个可用的接口**：`/api/package_info?platform=16`（x64）/ `?platform=7`（ia32）返回**带签名的临时 URL**（`x-expires` 约 30 分钟，过期后 403，改 `x-expires` 会破坏签名）；`/api/downloads` 给的是 `sf3-cn.feishucdn.com/obj/...` 的**无签名稳定直链**，清单用后者。
 - **两个架构都收**：`Windows`（ia32）和 `Windows_x64`；飞书官方不提供 arm64 桌面版。
 - **安装形态**：下载的是 491 MB 自解压 exe（内含 Delta LZMA 的 7z 载荷），用 `#/dl.7z` 让 Scoop 直接解包；`extract_to: app` 把 9896 个文件隔离到 `app\`，主程序 `app\Feishu.exe`，快捷方式指向它。用户数据走应用默认目录，与官网安装版共用同一份，只应保留一个在用。
+
+**自动更新的开关落点与禁用**：设置页「自动安装更新」复选框读写 preference 键 `lark.update.disable_auto_install_update`（关闭时写 `true`），存在 `%APPDATA%\LarkShell\sdk_storage\<用户 hash>\settings.db`——这是**加密的 global preference**（文件头非 SQLite magic，全盘字面搜不到键名），用户级、跨 scoop 升级保留。关闭动作本身被记进 `%APPDATA%\LarkShell\update\update_report.json`，事件名 `update_disabled_install`。
+
+从 `frame.dll` 反解出飞书更新器还支持两个官方禁用信号：环境变量 **`LARK_UPDATE_DISALLOW_AUTO_UPDATE`**（日志 `LARK_UPDATE_DISALLOW_AUTO_UPDATE is set, won't start update`）和 flag 文件 `disallow_auto_update.flag`。清单用 Scoop 原生 `env_set` 字段设 `LARK_UPDATE_DISALLOW_AUTO_UPDATE=1`：用户级环境变量、卸载时 Scoop 自动清理，且实测重启后 `update\`/`update_downloading\` 目录 mtime 不变（不再下载更新），应用照常启动。`env_set` 与 version/URL/hash 无关，Excavator bump 不会动它（已在副本上模拟 bump 验证）。
+
 - 第三方 bucket 里 feishu manifest 很多（dorado / kkzzhizhou / lzwme 等 14 个仓库、30 份），本清单的 checkver/autoupdate 以 `chawyehsu/dorado` 为基础；调研细节见 `docs/third-party-feishu-manifests.md`。
 
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
