@@ -18,7 +18,7 @@ scoop install slothtron/workbuddy-cn
 | `zcode` | ZCode 稳定通道。与 Extras 的 `zcode` 同一个包，但 checkver 改打厂商更新接口，不再依赖官网页面 |
 | `zcode-preview` | ZCode preview 通道，比稳定通道早若干版本 |
 | `trae-cn` | 字节 Trae 国内版（trae.cn）。Extras 的 `trae` 是国际版，且其 autoupdate 模板仍用旧产物名 `TraeCode-Setup-x64.exe`，厂商在 2.3.93439 起已改名 `TRAE-Setup-x64.exe` |
-| `qwenwork` | 阿里千问办公（qwenwork.cn）。下载直链是常青地址、文件名不带版本，版本号取自官方更新日志 |
+| `qwenwork` | 阿里千问办公（qwenwork.cn）。走厂商升级 API 取精确构建版本 + 固定 CI 产物 + 哈希（免下载），Win x64 |
 | `feishu` | 字节飞书（feishu.cn）。x64 + 32bit 双架构；版本/下载地址/MD5 全部取自官方 `api/downloads` 接口 |
 | `winc` | DEEIX 的 Rust 文本编辑器（winc.si，Apache-2.0）。装的是官方 portable zip，`winc` 兼作 `git core.editor` |
 | `envboard` | 多环境代理管理器（本仓项目，Tauri 桌面 + 进程内代理引擎，github.com/Slothtron/envboard）。装的是官方免安装 exe，按**便携形态**运行：`post_install` 写 `envboard.portable` 标记，状态经 `persist` 落到 `scoop\persist\envboard\envboard-data`。需要 WebView2 |
@@ -106,13 +106,16 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 
 ### 千问办公（qwenwork）
 
-官网只给一个常青直链 `https://assets.qwenwork.cn/release/latest/qwenworkcn-setup-x64.exe`（electron-builder NSIS 3.04、asInvoker；载荷 `$PLUGINSDIR\app-64.7z` 393 MB，解包 1.5 GB；主程序 `QwenWorkCN.exe`，ProductName `QwenWorkCN`、CompanyName DingTalk）。文件名不带版本，OSS 对象也没有 `x-oss-meta-version` 头，`latest.yml` / `version.json` 一律 404，**版本号只能从官方更新日志取**：`https://docs.qwenwork.cn/release-notes/desktop.md` 里最新一条是 `<Update ... description="千问办公 X.Y.Z">`，清单 `checkver` 就抓这一行（按出现顺序，最新在最前）。`autoupdate` 的 URL 不含 `$version`，哈希由 Excavator 现场下载 393 MB 重算。
+**版本 / 地址 / 哈希全部来自厂商升级 API**：`POST https://clientupgrade.qwenwork.cn/upgrade/query`（body 里 `appInfo.name=qwenworkcn`、`arch=10`、`channel=stable`，machineId/uuid 用随机 GUID）。响应 `upgradeInfo` 一次给出精确构建版本（如 `2.1.0-26111906`）、`resources[0].url`（**固定 CI 产物**，不是常青包）和 `sha512`(base64)。`checkver.script` 调这个 API，输出 `版本 URL 同目录 manifest.json URL` 三元组，用命名组捕获；`autoupdate.url = $matchUrl`，哈希用 `autoupdate.hash = { url: $matchHashurl, jsonpath: $.artifacts[0].md5 }` 从产物同目录的 `manifest.json` 取 MD5。
 
-安装形态：Scoop 解包 `app-64.7z` 后直接用 `QwenWorkCN.exe`。用户数据在 `%APPDATA%\QwenWorkCN`（另有缓存目录 `~/.qwenworkcn`），与官网安装版共用同一份，只应保留一个在用。应用靠 `resources\install-type.json` 判断安装类型（只认 `user` / `system` / `store` 三个值），scoop 路径命中路径兜底，日志里是 `[InstallType] Resolved Windows install type { installType: 'portable' }`；它没有 Qoder 那种 launcher，也就不需要 `state.ini` / `install.ini` / `updater.cfg`（缺 `updater.cfg` 时 `installerKind` 为 `null`，不影响启动）。
+比旧的「官网常青直链 + 更新日志取版本」方案强在两点：
 
-**它会自己建开始菜单入口**：`Programs\千问办公\千问办公.lnk`，target 取 `process.execPath`（版本目录，不是 `current`，升级后就成死链）。压制方式和 qoder-cn 一样——`installer.script` 在该路径放隐藏目录占位、顺手把父目录也设成隐藏，`uninstaller` 删掉；代价是每次启动日志多一条 `Failed to read shortcut link` WARN。菜单里唯一的入口是 `Scoop Apps\千问办公.lnk`。
+1. **根治 hash 静默失效**：旧清单用 `release/latest/qwenworkcn-setup-x64.exe` 常青地址 + 硬编码 hash + 从更新日志取语义版本。实测该常青对象在版本没变时就重签过（SHA256 从 `f696664a…` 变 `55f98707…`），导致清单 hash 对不上、`checkver` 又因版本没变不触发——`scoop install/update` 直接失败。新方案版本用精确构建号、地址用不可变 CI 产物，不会再错位。
+2. **Excavator bump 免下载**：产物同目录有 `manifest.json`，里面 `artifacts[0].md5` 是可 GET 的 hex MD5（与文件实测一致）。`autoupdate.hash` 用 `jsonpath` 取它，bump 时只读几百字节 JSON，不再每次下 398 MB。实测 `checkver -u` 打印 `Found: md5:b3c5563e… using Json Mode`，版本/URL/hash 全部正确重建。
 
-**自动更新**：`AutoUpdater` / `NativeUpdater` 打 `gateway.qwenwork.cn/api/client/biz/v1/client-updates/check`。未登录时直接 `[NativeUpdater] Skipping check: user not authenticated`；登录后在 `portable` 安装下 `canSilentUpdate=false`，流程是「下载 → 提示 → 用户确认 → 拉起 NSIS」，确认后会往 `%LOCALAPPDATA%\Programs` 再装一份官方 user 布局。**版本只用 `scoop update qwenwork` 升**，别点应用内的更新提示。
+**安装形态**：CI 产物是纯 7z（`qwenworkcn_..._x64-update-package.7z`，约 399 MB），内部自带 `app\` 前缀；`extract_dir: app` 会把内容上移到安装根，主程序落在 `<dir>\QwenWorkCN.exe`，快捷方式指向它。用户数据仍在 `%APPDATA%\QwenWorkCN`，与官网安装版共用同一份，只应保留一个在用。**新版不再自建开始菜单入口**：实测删掉 `Programs\千问办公\千问办公.lnk` 占位后启动，应用没有重建它——所以清单不再需要旧版的 installer/uninstaller 隐藏目录占位逻辑。菜单里唯一的入口是 `Scoop Apps\千问办公.lnk`。
+
+**自动更新**：内置 updater 打 `gateway.qwenwork.cn/api/client/biz/v1/client-updates/check`；未登录不检查，登录后在 portable 安装下只能手动确认并拉起 NSIS 装到 `%LOCALAPPDATA%\Programs`。**版本只用 `scoop update qwenwork` 升**，别点应用内的更新提示。官网另提供 `qwenworkcn-setup-arm64.exe`，但厂商升级 API 与 CI 产物目前只发 x64（arch=10），故清单暂只收 x64。
 
 ### 飞书（feishu）
 

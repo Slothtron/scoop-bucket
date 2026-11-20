@@ -1,33 +1,17 @@
 {
-    "version": "2.1.0",
+    "version": "2.1.0-26111906",
     "description": "An AI office assistant from Alibaba that gets work done (China edition).",
     "homepage": "https://qwenwork.cn",
-    "license": "Proprietary",
+    "license": {
+        "identifier": "Proprietary",
+        "url": "https://www.qwenwork.cn/terms"
+    },
     "architecture": {
         "64bit": {
-            "url": "https://assets.qwenwork.cn/release/latest/qwenworkcn-setup-x64.exe#/dl.7z",
-            "hash": "f696664a7f5dd658e840b13839af4ecfbc592b5165ec0fdbf12f3978017e5497"
+            "url": "https://assets.qwenwork.cn/cicd/qwenworkcn/builds/261119/rel/3bf23777ee6747fb3d50591803e3588e/qwenworkcn_2.1.0-26111906_x64-update-package.7z",
+            "hash": "md5:b3c5563e612ccc0f1669361381786eee",
+            "extract_dir": "app"
         }
-    },
-    "installer": {
-        "script": [
-            "Get-Item \"$dir\\`$PLUGINSDIR\\app*.7z\" | Select-Object -First 1 | Expand-7zipArchive -DestinationPath $dir",
-            "Remove-Item \"$dir\\`$*\", \"$dir\\Uninst*\" -Force -Recurse -ErrorAction Ignore",
-            "$selfLnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\千问办公\\千问办公.lnk'",
-            "if ((Test-Path -LiteralPath $selfLnk) -and -not (Get-Item -LiteralPath $selfLnk -Force).PSIsContainer) { Remove-Item -LiteralPath $selfLnk -Force }",
-            "if (-not (Test-Path -LiteralPath $selfLnk)) { New-Item -ItemType Directory -Path $selfLnk -Force | Out-Null }",
-            "$selfFolder = Get-Item -LiteralPath (Split-Path $selfLnk -Parent) -Force",
-            "$selfFolder.Attributes = $selfFolder.Attributes -bor [IO.FileAttributes]::Hidden",
-            "$selfItem = Get-Item -LiteralPath $selfLnk -Force",
-            "$selfItem.Attributes = $selfItem.Attributes -bor [IO.FileAttributes]::Hidden"
-        ]
-    },
-    "uninstaller": {
-        "script": [
-            "$selfLnk = Join-Path $env:APPDATA 'Microsoft\\Windows\\Start Menu\\Programs\\千问办公\\千问办公.lnk'",
-            "Remove-Item -LiteralPath $selfLnk -Recurse -Force -ErrorAction Ignore",
-            "Remove-Item -LiteralPath (Split-Path $selfLnk -Parent) -Force -ErrorAction Ignore"
-        ]
     },
     "shortcuts": [
         [
@@ -36,13 +20,24 @@
         ]
     ],
     "checkver": {
-        "url": "https://docs.qwenwork.cn/release-notes/desktop.md",
-        "regex": "description=\"千问办公 ([\\d.]+)\""
+        "script": [
+            "$uuid = [guid]::NewGuid().ToString()",
+            "$body = @{ appInfo = @{ name = 'qwenworkcn'; version = '1.0.0'; arch = 10; channel = 'stable' }; osInfo = @{ type = 0 }; hardwareInfo = @{ machineId = $uuid }; userInfo = @{ uuid = $uuid }; checkType = 0 }",
+            "$r = Invoke-RestMethod -Uri 'https://clientupgrade.qwenwork.cn/upgrade/query' -Method POST -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 5) -TimeoutSec 40",
+            "$url = $r.upgradeInfo.resources[0].url",
+            "$hashUrl = ($url -replace '[^/]+$') + 'manifest.json'",
+            "Write-Output $r.upgradeInfo.version $url $hashUrl"
+        ],
+        "regex": "^(\\S+)\\s+(?<url>\\S+)\\s+(?<hashurl>\\S+)$"
     },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://assets.qwenwork.cn/release/latest/qwenworkcn-setup-x64.exe#/dl.7z"
+                "url": "$matchUrl",
+                "hash": {
+                    "url": "$matchHashurl",
+                    "jsonpath": "$.artifacts[0].md5"
+                }
             }
         }
     }
