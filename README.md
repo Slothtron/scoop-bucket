@@ -20,6 +20,7 @@ scoop install slothtron/workbuddy-cn
 | `trae-cn` | 字节 Trae 国内版（trae.cn）。Extras 的 `trae` 是国际版，且其 autoupdate 模板仍用旧产物名 `TraeCode-Setup-x64.exe`，厂商在 2.3.93439 起已改名 `TRAE-Setup-x64.exe` |
 | `qwenwork` | 阿里千问办公（qwenwork.cn）。走厂商升级 API 取精确构建版本 + 固定 CI 产物 + 哈希（免下载），Win x64 |
 | `feishu` | 字节飞书（feishu.cn）。x64 + 32bit 双架构；版本/下载地址/MD5 全部取自官方 `api/downloads` 接口 |
+| `anode` | skulitom/Anode（MIT）。Windows 后台 computer-use MCP server/CLI（独立子会话，给 Claude Code/Codex 用）。x64；portable zip，上游仓库自己也是 scoop bucket |
 | `winc` | DEEIX 的 Rust 文本编辑器（winc.si，Apache-2.0）。装的是官方 portable zip，`winc` 兼作 `git core.editor` |
 | `envboard` | 多环境代理管理器（本仓项目，Tauri 桌面 + 进程内代理引擎，github.com/Slothtron/envboard）。装的是官方免安装 exe，按**便携形态**运行：`post_install` 写 `envboard.portable` 标记，状态经 `persist` 落到 `scoop\persist\envboard\envboard-data`。需要 WebView2 |
 
@@ -141,6 +142,16 @@ Select-String -Path "$env:APPDATA\com.qodercn.app.stable\logs\*\main.log" -Patte
 `zcode` 与 Extras 同名，注册后 `scoop install zcode` 会变成歧义，要用 `scoop install slothtron/zcode` 指定。`zcode` 与 `zcode-preview` 是同一个应用的两种通道，共用一个 profile（`%APPDATA%\ZCode`），不要同时装两个。
 
 `trae-cn` 与国际版是两条独立发布线（国内版当前号段落后于国际版）。两者的主程序名（`Trae CN.exe` / `Trae.exe`）与 CLI 名（`bin\trae-cn.cmd` / `bin\trae.cmd`）都不同，装完命令是 `trae-cn`，快捷方式也不会撞名。
+
+### Anode（skulitom/Anode）
+
+Windows 后台 computer-use 工具（MIT，C#/.NET 10）：给 Claude Code / Codex 等 stdio MCP 客户端一个**独立的子会话**（child session / loopback RDP），agent 在里面操作原生应用、截图、做 UI 测试，不抢用户鼠标键盘。**仅 x64、Windows Pro/Enterprise/Education（Home 不支持）**，需一次性管理员 `anode setup` 开启 child sessions（会重启 Remote Desktop Services）。完整源码走读见 `research/anode-2026-11/anode-analysis.md`。
+
+上游仓库**自己就是 scoop bucket**（`scoop bucket add anode https://github.com/skulitom/Anode`），`bucket/anode.json` 维护得很规范；本清单以它为底稿，两个关键点：
+
+- **不用 `bin` shim**：`anode.exe` 是 WinExe（GUI 子系统但保留 stdout），Scoop shim 在启动前释放控制台，CLI 输出会丢。改用 `env_add_path: "."` 把安装目录加进 PATH（安装后需新开终端才生效）。实测 `anode.exe --version` → `anode 0.11.4`。
+- `checkver: "github"` + autoupdate hash 从同 release 的 `SHA256SUMS` 用 Extract Mode 提取，Excavator bump 只下一个几百字节文本、不碰 71 MB 的 zip。
+- **升级前要 `anode quit`** 并关掉 MCP 客户端，否则 scoop 因 exe 被占用拒绝更新（notes 里已写明）。
 
 ## 目录结构
 
