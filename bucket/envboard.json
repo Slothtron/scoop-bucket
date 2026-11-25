@@ -1,12 +1,12 @@
 {
-    "version": "0.2.4",
+    "version": "0.3.0",
     "description": "Multi-environment HTTP proxy manager: one environment per port, several environments running at once.",
     "homepage": "https://github.com/Slothtron/envboard",
     "license": "MIT",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/Slothtron/envboard/releases/download/v0.2.4/envboard.exe",
-            "hash": "dd298f43d057bc4db719475233e4878e9038da54e53fdc61f42b67ffe6edac14"
+            "url": "https://github.com/Slothtron/envboard/releases/download/v0.3.0/envboard.exe",
+            "hash": "5411fd7fc361a54853b28c8d68aa5316472478b38bad08fba01f374f629bc1cb"
         }
     },
     "bin": "envboard.exe",
@@ -16,12 +16,8 @@
             "envboard"
         ]
     ],
-    "persist": [
-        "envboard-data"
-    ],
-    "post_install": [
-        "Set-Content -LiteralPath \"$dir\\envboard.portable\" -Value 'envboard portable marker (created by scoop); state: persist/envboard/envboard-data' -Encoding ascii"
-    ],
+    "persist": "envboard-data",
+    "post_install": "Set-Content -LiteralPath \"$dir\\envboard.portable\" -Value 'envboard portable marker (created by scoop); state: persist/envboard/envboard-data' -Encoding ascii",
     "notes": [
         "Requires the WebView2 runtime (already present on most Windows 10/11 machines).",
         "This is the portable build: state (ledger, rules, shared CA, lock) lives in $persist_dir\\envboard-data and survives 'scoop update'.",
